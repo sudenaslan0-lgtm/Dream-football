@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dream Football Mobile</title>
+    <style>
+        body { margin: 0; background-color: #121212; color: white; font-family: Arial, sans-serif; display: flex; justify-content: center; }
+        .phone-container { width: 360px; height: 640px; background-color: #1a1a1a; display: flex; flex-direction: column; position: relative; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .top-bar { background-color: #1f1f1f; padding: 10px 15px; display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; }
+        .balance { color: gold; }
+        .team-power { color: #4caf50; }
+        .screen { display: none; flex-direction: column; align-items: center; height: 100%; width: 100%; }
+        .active { display: flex; }
+        h1 { color: #4caf50; font-size: 26px; text-align: center; margin-top: 60px; font-weight: bold; letter-spacing: 1px; }
+        .menu-btn { font-size: 14px; font-weight: bold; color: white; width: 200px; padding: 15px 0; border: none; border-radius: 6px; margin: 12px 0; cursor: pointer; transition: 0.2s; }
+        .btn-play { background-color: #4caf50; }
+        .btn-lineup { background-color: #2196f3; }
+        .btn-pack { background-color: #ff9800; }
+        .btn-back { background-color: #333; width: auto; padding: 5px 15px; margin: 10px; align-self: flex-start; border-radius: 4px; font-size: 12px; border: none; color: white; }
+        .pitch { width: 320px; height: 360px; background-color: #2e7d32; border: 2px solid white; border-radius: 4px; position: relative; margin-top: 10px; }
+        .goal { width: 100px; height: 25px; background-color: white; border: 2px solid black; position: absolute; top: 0; left: 110px; }
+        .penalty-box { width: 160px; height: 70px; border: 2px solid white; position: absolute; top: 0; left: 80px; }
+        .ball { width: 20px; height: 20px; background-color: white; border: 2px solid black; border-radius: 50%; position: absolute; bottom: 60px; left: 150px; transition: bottom 0.4s ease-in; }
+        .shoot-btn { background-color: #e74c3c; width: 160px; }
+        .pack-card { background-color: #1f1f1f; border: 2px solid gold; border-radius: 8px; padding: 20px; width: 240px; text-align: center; margin-top: 40px; }
+        .pack-title { color: gold; font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+        .pack-price { color: #4caf50; font-size: 16px; font-weight: bold; margin: 10px 0; }
+        .club-list { width: 290px; overflow-y: auto; flex-grow: 1; padding: 10px; margin-bottom: 20px; }
+        .player-item { background-color: #222; padding: 10px; border-radius: 4px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #fff; font-size: 13px; cursor: pointer; }
+        .player-efsane { border-left-color: gold; color: gold; font-weight: bold; }
+        .player-yildiz { border-left-color: #2196f3; color: #2196f3; }
+        .lineup-pitch { width: 320px; height: 180px; background-color: #1e5e2f; border: 2px solid white; position: relative; margin-bottom: 10px; }
+        .field-player { width: 30px; height: 30px; background-color: white; border-radius: 50%; position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: black; }
+        .field-player span { position: absolute; top: 32px; color: white; font-size: 9px; white-space: nowrap; font-weight: bold; background: rgba(0,0,0,0.6); padding: 1px 3px; border-radius: 2px; }
+    </style>
+</head>
+<body>
+
+<div class="phone-container">
+    <!-- Üst Bilgi Barı -->
+    <div class="top-bar">
+        <span class="balance" id="txt-bakiye">💰 1000 G</span>
+        <span class="team-power" id="txt-gen">⭐ Gen: 65</span>
+    </div>
+
+    <!-- 1. EKRAN: ANA MENÜ -->
+    <div class="screen active" id="scr-menu">
+        <h1>DREAM FOOTBALL</h1>
+        <div style="margin-top: 40px; display: flex; flex-direction: column; align-items: center;">
+            <button class="menu-btn btn-play" onclick="ekranDegistir('scr-play')">🎮 MAÇ OYNA</button>
+            <button class="menu-btn btn-lineup" onclick="ekranDegistir('scr-lineup'); kadroGuncelle();">📋 KADRO DİZ</button>
+            <button class="menu-btn btn-pack" onclick="ekranDegistir('scr-pack')">🛒 PAKET AÇ</button>
+        </div>
+    </div>
+
+    <!-- 2. EKRAN: MAÇ OYNA -->
+    <div class="screen" id="scr-play">
+        <button class="menu-btn btn-back" onclick="ekranDegistir('scr-menu')">⬅ Menü</button>
+        <div class="pitch">
+            <div class="goal"></div>
+            <div class="penalty-box"></div>
+            <div class="ball" id="futbol-topu"></div>
+        </div>
+        <button class="menu-btn shoot-btn" onclick="sutCek()">🚀 ŞUT ÇEK!</button>
+    </div>
+
+    <!-- 3. EKRAN: KADRO DİZ -->
+    <div class="screen" id="scr-lineup">
+        <button class="menu-btn btn-back" onclick="ekranDegistir('scr-menu')">⬅ Menü</button>
+        <div class="lineup-pitch" id="l-pitch"></div>
+        <div style="font-size: 11px; color: #aaa; margin-left: 15px; align-self: flex-start; margin-bottom: 5px;">KULÜPTEKİ OYUNCULAR (Kadroya almak için dokun):</div>
+        <div class="club-list" id="club-players-list"></div>
+    </div>
+
+    <!-- 4. EKRAN: PAKET AÇ -->
+    <div class="screen" id="scr-pack">
+        <button class="menu-btn btn-back" onclick="ekranDegistir('scr-menu')">⬅ Menü</button>
+        <div class="pack-card">
+            <div class="pack-title">👑 EFSANELER PAKETİ 👑</div>
+            <div style="font-size: 12px; color: #ccc; margin-top: 5px;">99'luk RONALDO ve MESSI Şansı!</div>
+            <div class="pack-price">Fiyat: 300 G</div>
+            <button class="menu-btn btn-pack" style="width: 140px; padding: 10px 0; margin: 0;" onclick="paketAc()">PAKETİ AÇ</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let bakiye = 1000;
+    let takimGucu = 65;
+    let sutCekiliyor = false;
+
+    const kartHavuzu = [
+        {isim: "C. Ronaldo", reyting: 99, tur: "Efsane 🌟"},
+        {isim: "L. Messi", reyting: 99, tur: "Efsane 🌟"},
+        {isim: "Neymar Jr", reyting: 94, tur: "Yıldız ⭐"},
+        {isim: "K. Mbappé", reyting: 93, tur: "Yıldız ⭐"},
+        {isim: "E. Haaland", reyting: 92, tur: "Yıldız ⭐"},
+        {isim: "Mauro Icardi", reyting: 88, tur: "Altın 🟡"},
+        {isim: "Edin Džeko", reyting: 85, tur: "Altın 🟡"},
+        {isim: "K. Aktürkoğlu", reyting: 82, tur: "Gümüş ⚪"}
+    ];
+
+    let kulupKartlari = [
+        {isim: "Oyuncu 1", reyting: 65, tur: "Bronz 🟤"},
+        {isim: "Oyuncu 2", reyting: 63, tur: "Bronz 🟤"},
+        {isim: "Oyuncu 3", reyting: 60, tur: "Bronz 🟤"}
+    ];
+
+    let ilk11 = [...kulupKartlari];
+
+    function ekranDegistir(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function bakiyeGuncelle() {
+        document.getElementById('txt-bakiye').innerText = `💰 ${bakiye} G`;
+        document.getElementById('txt-gen').innerText = `⭐ Gen: ${takimGucu}`;
+    }
+
+    function sutCek() {
+        if (sutCekiliyor) return;
+        sutCekiliyor = true;
+        const top = document.getElementById('futbol-topu');
+        top.style.bottom = '330px';
+
+        setTimeout(() => {
+            let sans = Math.floor(Math.random() * 100) + 1;
+            if (sans <= takimGucu) {
+                let ödül = Math.floor(Math.random() * 201) + 100;
+                bakiye += ödül;
+                alert(`GOOOL! 🎉 Kadro kalitenle harika bir gol attın!\nKazandığın: ${ödül} G`);
+            } else {
+                alert("KAÇTI! 🧤 Şut dışarı gitti veya kalecide kaldı! Kadronu efsanelerle güçlendir.");
+            }
+            top.style.bottom = '60px';
+            sutCekiliyor = false;
+            bakiyeGuncelle();
+            ekranDegistir('scr-menu');
+        }, 500);
+    }
+
+    function paketAc() {
+        if (bakiye < 300) {
+            alert("Yetersiz Bakiye! Maç kazanarak paranı artırmalısın.");
+            return;
+        }
+        bakiye -= 300;
+        let sans = Math.floor(Math.random() * 100) + 1;
+        let cican;
+        if (sans <= 20) {
+            cican = kartHavuzu[Math.floor(Math.random() * 2)];
+        } else {
+            cican = kartHavuzu[Math.floor(Math.random() * 6) + 2];
+        }
+        kulupKartlari.push(cican);
+        bakiyeGuncelle();
+
+        if (cican.reyting === 99) {
+            alert(`💥 İNANILMAZ WALKOUT! 💥\n\n⚽ Çıkan Oyuncu: ${cican.isim.toUpperCase()}\n⭐ Reyting: ${cican.reyting}\n🏆 Sınıf: ${cican.tur}`);
+        } else {
+            alert(`📦 Paketten Çıkan:\n${cican.isim} (REY: ${cican.reyting})`);
+        }
+    }
+
+    function kadroGuncelle() {
+        const liste = document.getElementById('club-players-list');
+        liste.innerHTML = '';
+        kulupKartlari.forEach((p, index) => {
+            let cls = p.reyting === 99 ? 'player-efsane' : (p.reyting > 90 ? 'player-yildiz' : '');
+            let div = document.createElement('div');
+            div.className = `player-item ${cls}`;
+            div.innerHTML = `<span>${p.tur} ${p.isim} (REY: ${p.reyting})</span>`;
+            div.onclick = () => kadroyaAl(p);
+            liste.appendChild(div);
+        });
+
+        const saha = document.getElementById('l-pitch');
+        saha.innerHTML = '';
+        let pozisyonlar = [
+            {x: 145, y: 130}, {x: 60, y: 90}, {x: 230, y: 90}, {x: 100, y: 20}, {x: 190, y: 20}
+        ];
+        ilk11.slice(0, 5).forEach((o, i) => {
+            let p = pozisyonlar[i];
+            let bg = o.reyting === 99 ? 'gold' : 'white';
+            saha.innerHTML += `<div class="field-player" style="left:${p.x}px; top:${p.y}px; background-color:${bg}">${o.reyting}<span>${o.isim}</span></div>`;
+        });
+    }
+
+    function kadroyaAl(oyuncu) {
+        if (ilk11.includes(oyuncu)) {
